@@ -13,7 +13,7 @@ PretoneioLib.Defaults = {
     Font = Enum.Font.SourceSans,
 }
 
--- Função para criar uma janela
+-- Função para criar uma nova janela
 function PretoneioLib:Window(config)
     local title = config.Title or "Título"
     local subtitle = config.SubTitle or ""
@@ -24,28 +24,27 @@ function PretoneioLib:Window(config)
     local Header = Instance.new("Frame")
     local TitleLabel = Instance.new("TextLabel")
     local SubTitleLabel = Instance.new("TextLabel")
-    local TabContainer = Instance.new("Frame")
     local TabButtons = Instance.new("Frame")
     local TabContents = Instance.new("Frame")
-
+    
     -- Configurações do ScreenGui
     ScreenGui.Name = "PretoneioLibUI"
     ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
-    -- Configuração da janela principal (Frame)
+    -- Configuração da janela principal
     Frame.Name = "Window"
     Frame.Size = UDim2.new(0, 400, 0, 300)
     Frame.Position = UDim2.new(0.5, -200, 0.5, -150)
     Frame.BackgroundColor3 = self.Defaults.Theme.BackgroundColor
     Frame.Parent = ScreenGui
 
-    -- Configuração do cabeçalho (Header)
+    -- Configuração do cabeçalho
     Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, 50)
     Header.BackgroundColor3 = self.Defaults.Theme.HeaderColor
     Header.Parent = Frame
 
-    -- Configuração do título (TitleLabel)
+    -- Configuração do título
     TitleLabel.Name = "TitleLabel"
     TitleLabel.Size = UDim2.new(1, 0, 0, 30)
     TitleLabel.Position = UDim2.new(0, 0, 0, 5)
@@ -56,7 +55,7 @@ function PretoneioLib:Window(config)
     TitleLabel.TextSize = 20
     TitleLabel.Parent = Header
 
-    -- Configuração do subtítulo (SubTitleLabel)
+    -- Configuração do subtítulo
     SubTitleLabel.Name = "SubTitleLabel"
     SubTitleLabel.Size = UDim2.new(1, 0, 0, 20)
     SubTitleLabel.Position = UDim2.new(0, 0, 0, 30)
@@ -67,25 +66,19 @@ function PretoneioLib:Window(config)
     SubTitleLabel.TextSize = 14
     SubTitleLabel.Parent = Header
 
-    -- Configuração do container de abas (TabContainer)
-    TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(1, 0, 1, -50)
-    TabContainer.Position = UDim2.new(0, 0, 0, 50)
-    TabContainer.BackgroundTransparency = 1
-    TabContainer.Parent = Frame
-
-    -- Configuração para os botões das abas
+    -- Configuração de botões das abas
     TabButtons.Name = "TabButtons"
     TabButtons.Size = UDim2.new(1, 0, 0, 30)
+    TabButtons.Position = UDim2.new(0, 0, 0, 50)
     TabButtons.BackgroundTransparency = 1
-    TabButtons.Parent = TabContainer
+    TabButtons.Parent = Frame
 
-    -- Configuração para os conteúdos das abas
+    -- Configuração do conteúdo das abas
     TabContents.Name = "TabContents"
-    TabContents.Size = UDim2.new(1, 0, 1, -30)
-    TabContents.Position = UDim2.new(0, 0, 0, 30)
+    TabContents.Size = UDim2.new(1, 0, 1, -80)
+    TabContents.Position = UDim2.new(0, 0, 0, 80)
     TabContents.BackgroundTransparency = 1
-    TabContents.Parent = TabContainer
+    TabContents.Parent = Frame
 
     -- Estrutura da janela
     local window = {
@@ -131,10 +124,34 @@ function PretoneioLib:Window(config)
         -- Adicionar aba à lista de abas
         table.insert(self.Tabs, { Button = TabButton, Content = TabContent })
 
-        return TabContent
+        -- Retorna o conteúdo da aba para adicionar elementos
+        return {
+            AddButton = function(self, buttonConfig)
+                return PretoneioLib:CreateButton(TabContent, buttonConfig.Text, buttonConfig.Callback)
+            end,
+        }
     end
 
     return window
+end
+
+-- Função para criar um botão
+function PretoneioLib:CreateButton(parent, text, callback)
+    local Button = Instance.new("TextButton")
+    Button.Size = UDim2.new(0, 100, 0, 30)
+    Button.BackgroundColor3 = self.Defaults.Theme.ButtonColor
+    Button.Text = text
+    Button.TextColor3 = self.Defaults.Theme.TextColor
+    Button.Font = self.Defaults.Font
+    Button.Parent = parent
+
+    Button.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        end
+    end)
+
+    return Button
 end
 
 return PretoneioLib
