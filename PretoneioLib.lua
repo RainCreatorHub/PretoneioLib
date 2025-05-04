@@ -1,155 +1,166 @@
--- PretoneioLib
 local PretoneioLib = {}
 
--- Services 
-local Players = game:GetService("Players") 
-local LocalPlayer = Players.LocalPlayer 
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+-- Serviços
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
 
--- Tema predefinido 
+-- Tema base
 local Themes = {
- Dark = {
-   Background = Color3.fromRGB(25, 25, 25), 
-   Tab = Color3.fromRGB(35, 35, 35), 
-   TabSelected = Color3.fromRGB(0, 120, 215), 
-   Element = Color3.fromRGB(45, 45, 45), 
-   Text = Color3.fromRGB(255, 255, 255)
-  }, 
-  
- Light = {
-    Background = Color3.fromRGB(245, 245, 245),
-    Tab = Color3.fromRGB(220, 220, 220),
-    TabSelected = Color3.fromRGB(0, 120, 215),
-    Element = Color3.fromRGB(230, 230, 230),
-    Text = Color3.fromRGB(10, 10, 10)
-  },
-  Blue = {
-    Background = Color3.fromRGB(20, 20, 35),
-    Tab = Color3.fromRGB(30, 30, 60),
-    TabSelected = Color3.fromRGB(0, 180, 255),
-    Element = Color3.fromRGB(40, 40, 80),
-    Text = Color3.fromRGB(255, 255, 255)
-  }
+    Dark = {
+        Background = Color3.fromRGB(25, 25, 25),
+        Tab = Color3.fromRGB(35, 35, 35),
+        Button = Color3.fromRGB(40, 40, 40),
+        Text = Color3.fromRGB(255, 255, 255),
+        Accent = Color3.fromRGB(0, 120, 255)
+    },
+    Light = {
+        Background = Color3.fromRGB(240, 240, 240),
+        Tab = Color3.fromRGB(220, 220, 220),
+        Button = Color3.fromRGB(200, 200, 200),
+        Text = Color3.fromRGB(20, 20, 20),
+        Accent = Color3.fromRGB(0, 120, 255)
+    },
+    Blue = {
+        Background = Color3.fromRGB(15, 15, 35),
+        Tab = Color3.fromRGB(25, 25, 60),
+        Button = Color3.fromRGB(30, 30, 80),
+        Text = Color3.fromRGB(255, 255, 255),
+        Accent = Color3.fromRGB(0, 150, 255)
+    }
 }
 
-function PretoneioLib:MakeWindow(data) local theme = Themes[(data.Theme or "Dark"):gsub("^%l", string.upper)] or Themes.Dark
+function PretoneioLib:MakeWindow(config)
+    local Theme = Themes[(config.Theme or "Dark"):gsub("^%l", string.upper)] or Themes.Dark
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "PretoneioUI"
-gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "PretoneioUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
-local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 450, 0, 350)
-main.Position = UDim2.new(0.5, -225, 0.5, -175)
-main.BackgroundColor3 = theme.Background
-main.BorderSizePixel = 0
-main.Active = true
-main.Draggable = true
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Parent = gui
+    -- Janela principal
+    local main = Instance.new("Frame")
+    main.Size = UDim2.new(0, 420, 0, 300)
+    main.Position = UDim2.new(0.3, 0, 0.3, 0)
+    main.BackgroundColor3 = Theme.Background
+    main.BorderSizePixel = 0
+    main.Active = true
+    main.Draggable = true
+    main.Parent = gui
 
-local title = Instance.new("TextLabel")
-title.Text = tostring(data.Title or "Interface")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = theme.Tab
-title.TextColor3 = theme.Text
-title.Font = Enum.Font.GothamBold
-title.TextSize = 20
-title.Parent = main
+    local cornerMain = Instance.new("UICorner", main)
+    cornerMain.CornerRadius = UDim.new(0, 12)
 
-local tabContainer = Instance.new("Frame")
-tabContainer.Size = UDim2.new(1, 0, 0, 30)
-tabContainer.Position = UDim2.new(0, 0, 0, 40)
-tabContainer.BackgroundTransparency = 1
-tabContainer.Parent = main
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.BackgroundTransparency = 1
+    title.Text = (config.Title or "Interface")
+    title.TextColor3 = Theme.Text
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 20
+    title.Parent = main
 
-local tabContent = Instance.new("Frame")
-tabContent.Size = UDim2.new(1, 0, 1, -70)
-tabContent.Position = UDim2.new(0, 0, 0, 70)
-tabContent.BackgroundTransparency = 1
-tabContent.ClipsDescendants = true
-tabContent.Parent = main
+    local subtitle = Instance.new("TextLabel")
+    subtitle.Size = UDim2.new(1, 0, 0, 20)
+    subtitle.Position = UDim2.new(0, 0, 0, 30)
+    subtitle.BackgroundTransparency = 1
+    subtitle.Text = (config.SubTitle or "")
+    subtitle.TextColor3 = Theme.Text
+    subtitle.Font = Enum.Font.Gotham
+    subtitle.TextSize = 14
+    subtitle.Parent = main
 
-local tabLayout = Instance.new("UIListLayout")
-tabLayout.FillDirection = Enum.FillDirection.Horizontal
-tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tabLayout.Parent = tabContainer
+    local tabHolder = Instance.new("Frame")
+    tabHolder.Size = UDim2.new(1, 0, 0, 30)
+    tabHolder.Position = UDim2.new(0, 0, 0, 55)
+    tabHolder.BackgroundTransparency = 1
+    tabHolder.Parent = main
 
-local currentTab
-local window = {}
+    local contentHolder = Instance.new("Frame")
+    contentHolder.Size = UDim2.new(1, -10, 1, -95)
+    contentHolder.Position = UDim2.new(0, 5, 0, 90)
+    contentHolder.BackgroundTransparency = 1
+    contentHolder.Parent = main
 
-function window:MakeTab(tabData)
-    local tabButton = Instance.new("TextButton")
-    tabButton.Text = tostring(tabData[1] or "Aba")
-    tabButton.Size = UDim2.new(0, 100, 1, 0)
-    tabButton.BackgroundColor3 = theme.Tab
-    tabButton.TextColor3 = theme.Text
-    tabButton.Font = Enum.Font.Gotham
-    tabButton.TextSize = 14
-    tabButton.BorderSizePixel = 0
-    tabButton.AutoButtonColor = false
-    tabButton.Parent = tabContainer
+    local window = {}
+    local tabs = {}
 
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(1, 0, 0, 2)
-    indicator.Position = UDim2.new(0, 0, 1, -2)
-    indicator.BackgroundColor3 = theme.TabSelected
-    indicator.Visible = false
-    indicator.BorderSizePixel = 0
-    indicator.Parent = tabButton
+    function window:MakeTab(tabData)
+        local tab = {}
 
-    local tabFrame = Instance.new("Frame")
-    tabFrame.Size = UDim2.new(1, 0, 1, 0)
-    tabFrame.BackgroundTransparency = 1
-    tabFrame.Visible = false
-    tabFrame.Parent = tabContent
+        local tabButton = Instance.new("TextButton")
+        tabButton.Size = UDim2.new(0, 100, 1, 0)
+        tabButton.Position = UDim2.new(0, #tabs * 105, 0, 0)
+        tabButton.BackgroundColor3 = Theme.Tab
+        tabButton.TextColor3 = Theme.Text
+        tabButton.Font = Enum.Font.Gotham
+        tabButton.TextSize = 16
+        tabButton.Text = tostring(tabData[1])
+        tabButton.Parent = tabHolder
 
-    local list = Instance.new("UIListLayout")
-    list.Padding = UDim.new(0, 6)
-    list.SortOrder = Enum.SortOrder.LayoutOrder
-    list.Parent = tabFrame
+        local tabCorner = Instance.new("UICorner", tabButton)
+        tabCorner.CornerRadius = UDim.new(0, 8)
 
-    tabButton.MouseButton1Click:Connect(function()
-        if currentTab then
-            currentTab.Frame.Visible = false
-            currentTab.Indicator.Visible = false
-            currentTab.Button.BackgroundColor3 = theme.Tab
-        end
-        tabFrame.Visible = true
-        indicator.Visible = true
-        tabButton.BackgroundColor3 = theme.TabSelected
-        currentTab = { Frame = tabFrame, Indicator = indicator, Button = tabButton }
-    end)
+        local tabContent = Instance.new("Frame")
+        tabContent.Size = UDim2.new(1, 0, 1, 0)
+        tabContent.BackgroundTransparency = 1
+        tabContent.Visible = false
+        tabContent.Parent = contentHolder
 
-    local tab = {}
+        local layout = Instance.new("UIListLayout", tabContent)
+        layout.Padding = UDim.new(0, 6)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    function tab:AddButton(buttonData)
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -20, 0, 30)
-        button.BackgroundColor3 = theme.Element
-        button.TextColor3 = theme.Text
-        button.Font = Enum.Font.Gotham
-        button.TextSize = 14
-        button.Text = tostring(buttonData[1] or "Botão")
-        button.BorderSizePixel = 0
-        button.Position = UDim2.new(0, 10, 0, 0)
-        button.AutoButtonColor = true
-        button.Parent = tabFrame
-
-        button.MouseButton1Click:Connect(function()
-            if buttonData.Callback then
-                buttonData.Callback()
+        tabButton.MouseButton1Click:Connect(function()
+            for _, t in pairs(tabs) do
+                t.Content.Visible = false
+                t.Button.BackgroundColor3 = Theme.Tab
             end
+            tabContent.Visible = true
+            tabButton.BackgroundColor3 = Theme.Accent
         end)
+
+        function tab:AddButton(buttonData)
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 35)
+            btn.Text = tostring(buttonData[1])
+            btn.BackgroundColor3 = Theme.Button
+            btn.TextColor3 = Theme.Text
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 16
+            btn.Parent = tabContent
+
+            local btnCorner = Instance.new("UICorner", btn)
+            btnCorner.CornerRadius = UDim.new(0, 8)
+
+            btn.MouseEnter:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = Theme.Accent }):Play()
+            end)
+            btn.MouseLeave:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.2), { BackgroundColor3 = Theme.Button }):Play()
+            end)
+
+            function btn:SetCallback(callback)
+                btn.MouseButton1Click:Connect(callback)
+            end
+
+            return btn
+        end
+
+        table.insert(tabs, {
+            Button = tabButton,
+            Content = tabContent
+        })
+
+        if #tabs == 1 then
+            tabContent.Visible = true
+            tabButton.BackgroundColor3 = Theme.Accent
+        end
+
+        return tab
     end
 
-    return tab
-end
-
-return window
-
+    return window
 end
 
 return PretoneioLib
