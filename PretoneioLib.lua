@@ -1,118 +1,149 @@
--- PretoneioLib atualizada com novo padrão: apenas Tabs com elementos
-
+-- PretoneioLib com estilo 
 local PretoneioLib = {}
 
-print("Carregando PretoneioLib...")
-
--- Services 
-local UIS = game:GetService("UserInputService") 
+-- Serviços 
 local Players = game:GetService("Players") 
-local LP = Players.LocalPlayer 
-local PG = LP:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService") 
+local UIS = game:GetService("UserInputService")
 
--- Utilitário para pegar nome 
-local function getName(data) if typeof(data) == "table" then return tostring(data[1]) else return tostring(data) end end
+-- Função principal 
+function PretoneioLib:MakeWindow(data) 
+local gui = Instance.new("ScreenGui") 
+  gui.Name = "PretoneioUI" 
+  gui.ResetOnSpawn = false 
+  gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 
-function PretoneioLib:MakeWindow(data) local title = getName(data.Title or "Window") local subtitle = getName(data.SubTitle or "")
+-- Tela de introdução (opcional)
+if data.Intro then
+    local introFrame = Instance.new("Frame")
+    introFrame.Size = UDim2.new(1, 0, 1, 0)
+    introFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    introFrame.ZIndex = 10
+    introFrame.Parent = gui
 
--- Criar GUI
-local gui = Instance.new("ScreenGui")
-gui.Name = "PretoneioUI"
-gui.ResetOnSpawn = false
-gui.Parent = PG
+    local introText = Instance.new("TextLabel")
+    introText.Text = tostring(data.IntroText)
+    introText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    introText.Font = Enum.Font.GothamBold
+    introText.TextScaled = true
+    introText.Size = UDim2.new(0.5, 0, 0.2, 0)
+    introText.Position = UDim2.new(0.25, 0, 0.4, 0)
+    introText.BackgroundTransparency = 1
+    introText.Parent = introFrame
 
+    task.wait(data.IntroDuration or 3)
+    introFrame:Destroy()
+end
+
+-- Janela principal
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 420, 0, 290)
-main.Position = UDim2.new(0.3, 0, 0.3, 0)
+main.Size = UDim2.new(0, 500, 0, 350)
+main.Position = UDim2.new(0.5, -250, 0.5, -175)
 main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
 main.Parent = gui
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, 0, 0, 30)
-titleLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-titleLabel.Text = title
-titleLabel.Font = Enum.Font.SourceSansBold
-titleLabel.TextSize = 20
-titleLabel.TextColor3 = Color3.fromRGB(0, 170, 255)
-titleLabel.Parent = main
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 8)
+uicorner.Parent = main
 
-local subtitleLabel = Instance.new("TextLabel")
-subtitleLabel.Size = UDim2.new(1, 0, 0, 20)
-subtitleLabel.Position = UDim2.new(0, 0, 0, 30)
-subtitleLabel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-subtitleLabel.Text = subtitle
-subtitleLabel.Font = Enum.Font.SourceSans
-subtitleLabel.TextSize = 16
-subtitleLabel.TextColor3 = Color3.fromRGB(150, 150, 255)
-subtitleLabel.Parent = main
+local title = Instance.new("TextLabel")
+title.Text = tostring(data.Title or "Janela")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.Parent = main
 
--- Abas horizontais
-local tabButtons = Instance.new("Frame")
-tabButtons.Size = UDim2.new(1, 0, 0, 30)
-tabButtons.Position = UDim2.new(0, 0, 0, 50)
-tabButtons.BackgroundTransparency = 1
-tabButtons.Parent = main
+local subtitle = Instance.new("TextLabel")
+subtitle.Text = tostring(data.SubTitle or "")
+subtitle.Size = UDim2.new(1, 0, 0, 25)
+subtitle.Position = UDim2.new(0, 0, 0, 40)
+subtitle.BackgroundTransparency = 1
+subtitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+subtitle.Font = Enum.Font.Gotham
+subtitle.TextSize = 14
+subtitle.Parent = main
 
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, 0, 1, -80)
-contentFrame.Position = UDim2.new(0, 0, 0, 80)
-contentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-contentFrame.BorderSizePixel = 0
-contentFrame.Parent = main
+local tabsHolder = Instance.new("Frame")
+tabsHolder.Size = UDim2.new(1, 0, 0, 30)
+tabsHolder.Position = UDim2.new(0, 0, 0, 65)
+tabsHolder.BackgroundTransparency = 1
+tabsHolder.Parent = main
 
-local window = { Tabs = {} }
+local tabLayout = Instance.new("UIListLayout")
+tabLayout.FillDirection = Enum.FillDirection.Horizontal
+tabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tabLayout.Padding = UDim.new(0, 5)
+tabLayout.Parent = tabsHolder
+
+local contentHolder = Instance.new("Frame")
+contentHolder.Size = UDim2.new(1, -10, 1, -105)
+contentHolder.Position = UDim2.new(0, 5, 0, 100)
+contentHolder.BackgroundTransparency = 1
+contentHolder.Parent = main
+
+local window = {
+    Tabs = {}
+}
 
 function window:MakeTab(tabData)
-    local tabName = getName(tabData)
+    local tabButton = Instance.new("TextButton")
+    tabButton.Text = tostring(tabData[1])
+    tabButton.Size = UDim2.new(0, 100, 1, 0)
+    tabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    tabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    tabButton.Font = Enum.Font.Gotham
+    tabButton.TextSize = 14
+    tabButton.AutoButtonColor = true
+    tabButton.Parent = tabsHolder
 
-    local tabBtn = Instance.new("TextButton")
-    tabBtn.Size = UDim2.new(0, 100, 1, 0)
-    tabBtn.Position = UDim2.new(0, #window.Tabs * 100, 0, 0)
-    tabBtn.Text = tabName
-    tabBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 40)
-    tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    tabBtn.Font = Enum.Font.SourceSansBold
-    tabBtn.TextSize = 16
-    tabBtn.Parent = tabButtons
+    local uicorner = Instance.new("UICorner")
+    uicorner.CornerRadius = UDim.new(0, 6)
+    uicorner.Parent = tabButton
 
     local tabFrame = Instance.new("Frame")
+    tabFrame.Visible = false
     tabFrame.Size = UDim2.new(1, 0, 1, 0)
     tabFrame.BackgroundTransparency = 1
-    tabFrame.Visible = #window.Tabs == 0
-    tabFrame.Parent = contentFrame
+    tabFrame.Parent = contentHolder
 
-    tabBtn.MouseButton1Click:Connect(function()
-        for _, t in ipairs(contentFrame:GetChildren()) do
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 6)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Parent = tabFrame
+
+    tabButton.MouseButton1Click:Connect(function()
+        for _, t in pairs(contentHolder:GetChildren()) do
             if t:IsA("Frame") then t.Visible = false end
         end
         tabFrame.Visible = true
     end)
 
-    local tab = { Frame = tabFrame, Elements = {} }
+    local tab = {}
 
     function tab:AddButton(buttonData)
-        local buttonName = getName(buttonData)
-        local yOffset = #tab.Elements * 40
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.Text = tostring(buttonData[1])
+        button.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        button.Font = Enum.Font.GothamBold
+        button.TextSize = 14
+        button.Parent = tabFrame
 
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, -20, 0, 30)
-        btn.Position = UDim2.new(0, 10, 0, yOffset)
-        btn.Text = buttonName
-        btn.BackgroundColor3 = Color3.fromRGB(0, 0, 80)
-        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-        btn.Font = Enum.Font.SourceSansBold
-        btn.TextSize = 18
-        btn.Parent = tab.Frame
+        local uicorner = Instance.new("UICorner")
+        uicorner.CornerRadius = UDim.new(0, 6)
+        uicorner.Parent = button
 
-        if typeof(buttonData) == "table" and buttonData.Callback then
-            btn.MouseButton1Click:Connect(buttonData.Callback)
-        end
-
-        table.insert(tab.Elements, btn)
-        return btn
+        button.MouseButton1Click:Connect(function()
+            if buttonData.Callback then
+                buttonData.Callback()
+            end
+        end)
     end
 
     table.insert(window.Tabs, tab)
