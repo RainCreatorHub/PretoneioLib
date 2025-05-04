@@ -5,10 +5,14 @@ local PretoneioLib = {}
 print("Carregando PretoneioLib...")
 
 -- Services 
-local UIS = game:GetService("UserInputService") local Players = game:GetService("Players") local LP = Players.LocalPlayer local PG = LP:WaitForChild("PlayerGui")
+local UIS = game:GetService("UserInputService") 
+local Players = game:GetService("Players") 
+local LP = Players.LocalPlayer 
+local PG = LP:WaitForChild("PlayerGui")
 
 -- Utilitário para pegar nome 
 local function getName(data) if typeof(data) == "table" then return tostring(data[1]) else return tostring(data) end end
+
 function PretoneioLib:MakeWindow(data) local title = getName(data.Title or "Window") local subtitle = getName(data.SubTitle or "")
 
 -- Criar GUI
