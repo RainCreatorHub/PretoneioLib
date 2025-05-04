@@ -74,11 +74,11 @@ function PretoneioLib:MakeWindow(config)
     contentFrame.Size = UDim2.new(1, 0, 1, -90)
     contentFrame.BackgroundTransparency = 1
 
-    -- Minimize Button
+    -- Minimize Button (ajustado para estilo simples como na imagem)
     local minimize = Instance.new("TextButton", main)
     minimize.Size = UDim2.new(0, 30, 0, 30)
     minimize.Position = UDim2.new(1, -35, 0, 5)
-    minimize.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+    minimize.BackgroundColor3 = Color3.fromRGB(255, 200, 0) -- Cor destacada como na imagem
     minimize.Text = "-"
     minimize.TextColor3 = Color3.fromRGB(0, 0, 0)
     minimize.Font = Enum.Font.GothamBold
@@ -89,40 +89,21 @@ function PretoneioLib:MakeWindow(config)
     local originalSize = main.Size
     local minimizedSize = UDim2.new(0, 120, 0, 60)
 
-    local function spin(button, callback)
-        local rotation = 0
-        local spinning = true
-        coroutine.wrap(function()
-            while spinning do
-                rotation += 30
-                button.Rotation = rotation
-                task.wait()
-            end
-        end)()
-        task.wait(0.3)
-        spinning = false
-        button.Rotation = 0
-        callback()
-    end
-
     minimize.MouseButton1Click:Connect(function()
-        spin(minimize, function()
-            if minimized then
-                TweenService:Create(main, TweenInfo.new(0.3), {Size = originalSize}):Play()
-                for _, v in pairs(main:GetChildren()) do
-                    if v ~= minimize then v.Visible = true end
-                end
-                minimize.Text = "-"
-            else
-                TweenService:Create(main, TweenInfo.new(0.3), {Size = minimizedSize}):Play()
-                for _, v in pairs(main:GetChildren()) do
-                    if v ~= minimize then v.Visible = false end
-                end
-                minimize.Visible = true
-                minimize.Text = "+"
+        if minimized then
+            TweenService:Create(main, TweenInfo.new(0.3), {Size = originalSize}):Play()
+            for _, v in pairs(main:GetChildren()) do
+                if v ~= minimize then v.Visible = true end
             end
-            minimized = not minimized
-        end)
+            minimize.Text = "-"
+        else
+            TweenService:Create(main, TweenInfo.new(0.3), {Size = minimizedSize}):Play()
+            for _, v in pairs(main:GetChildren()) do
+                if v ~= minimize then v.Visible = false end
+            end
+            minimize.Text = "+"
+        end
+        minimized = not minimized
     end)
 
     -- Tabs
