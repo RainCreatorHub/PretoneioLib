@@ -74,11 +74,11 @@ function PretoneioLib:MakeWindow(config)
     contentFrame.Size = UDim2.new(1, 0, 1, -90)
     contentFrame.BackgroundTransparency = 1
 
-    -- Minimize Button (ajustado para estilo simples como na imagem)
+    -- Minimize Button
     local minimize = Instance.new("TextButton", main)
     minimize.Size = UDim2.new(0, 30, 0, 30)
     minimize.Position = UDim2.new(1, -35, 0, 5)
-    minimize.BackgroundColor3 = Color3.fromRGB(255, 200, 0) -- Cor destacada como na imagem
+    minimize.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
     minimize.Text = "-"
     minimize.TextColor3 = Color3.fromRGB(0, 0, 0)
     minimize.Font = Enum.Font.GothamBold
@@ -87,7 +87,7 @@ function PretoneioLib:MakeWindow(config)
 
     local minimized = false
     local originalSize = main.Size
-    local minimizedSize = UDim2.new(0, 120, 0, 60)
+    local minimizedSize = UDim2.new(0, 420, 0, 50) -- Ajustado para mostrar apenas o título e o botão
 
     minimize.MouseButton1Click:Connect(function()
         if minimized then
@@ -99,7 +99,9 @@ function PretoneioLib:MakeWindow(config)
         else
             TweenService:Create(main, TweenInfo.new(0.3), {Size = minimizedSize}):Play()
             for _, v in pairs(main:GetChildren()) do
-                if v ~= minimize then v.Visible = false end
+                if v ~= minimize and v ~= title and v ~= subtitle then
+                    v.Visible = false
+                end
             end
             minimize.Text = "+"
         end
