@@ -9,21 +9,37 @@ local Themes = {
         Background = Color3.fromRGB(30, 30, 30),
         Tab = Color3.fromRGB(40, 40, 40),
         Button = Color3.fromRGB(50, 50, 50),
-        Text = Color3.fromRGB(255, 255, 255)
+        Text = Color3.fromRGB(255, 255, 255),
+        GradientStart = Color3.fromRGB(50, 50, 50), -- Gradiente inicial
+        GradientEnd = Color3.fromRGB(20, 20, 20)    -- Gradiente final
     },
     Light = {
         Background = Color3.fromRGB(240, 240, 240),
         Tab = Color3.fromRGB(220, 220, 220),
         Button = Color3.fromRGB(200, 200, 200),
-        Text = Color3.fromRGB(0, 0, 0)
+        Text = Color3.fromRGB(0, 0, 0),
+        GradientStart = Color3.fromRGB(255, 255, 255),
+        GradientEnd = Color3.fromRGB(200, 200, 200)
     },
     Blue = {
         Background = Color3.fromRGB(20, 20, 40),
         Tab = Color3.fromRGB(40, 60, 100),
         Button = Color3.fromRGB(60, 80, 140),
-        Text = Color3.fromRGB(255, 255, 255)
+        Text = Color3.fromRGB(255, 255, 255),
+        GradientStart = Color3.fromRGB(40, 60, 120),
+        GradientEnd = Color3.fromRGB(20, 30, 60)
     }
 }
+
+-- Função para criar um gradiente
+local function ApplyGradient(instance, startColor, endColor)
+    local gradient = Instance.new("UIGradient", instance)
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, startColor),
+        ColorSequenceKeypoint.new(1, endColor)
+    })
+    gradient.Rotation = 45 -- Gradiente diagonal para um visual mais dinâmico
+end
 
 -- Função para criar uma janela
 function PretoneioLib:MakeWindow(config)
@@ -33,6 +49,8 @@ function PretoneioLib:MakeWindow(config)
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.Name = "PretoneioLib"
     gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.ZIndex = 1000 -- Prioridade alta para evitar sobreposição
 
     -- Tela de introdução (se ativada)
     if config.Intro then
@@ -40,6 +58,7 @@ function PretoneioLib:MakeWindow(config)
         introFrame.Size = UDim2.new(1, 0, 1, 0)
         introFrame.BackgroundColor3 = theme.Background
         introFrame.BackgroundTransparency = 1
+        ApplyGradient(introFrame, theme.GradientStart, theme.GradientEnd)
 
         local introText = Instance.new("TextLabel", introFrame)
         introText.Size = UDim2.new(0, 200, 0, 50)
@@ -50,6 +69,12 @@ function PretoneioLib:MakeWindow(config)
         introText.Font = Enum.Font.GothamBold
         introText.TextSize = 24
         introText.TextTransparency = 1
+
+        -- Adiciona sombra ao texto de introdução
+        local shadow = Instance.new("UIStroke", introText)
+        shadow.Thickness = 2
+        shadow.Color = Color3.fromRGB(0, 0, 0)
+        shadow.Transparency = 0.5
 
         -- Animação de fade-in e fade-out
         local introDuration = config.IntroDuration or 3
@@ -80,6 +105,15 @@ function PretoneioLib:MakeWindow(config)
     main.Active = true
     main.Draggable = true
 
+    -- Adiciona gradiente ao fundo principal
+    ApplyGradient(main, theme.GradientStart, theme.GradientEnd)
+
+    -- Adiciona borda suave com UIStroke
+    local stroke = Instance.new("UIStroke", main)
+    stroke.Thickness = 2
+    stroke.Color = theme.Text
+    stroke.Transparency = 0.8
+
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
     -- Título da janela
@@ -90,6 +124,8 @@ function PretoneioLib:MakeWindow(config)
     title.TextColor3 = theme.Text
     title.Font = Enum.Font.GothamBold
     title.TextSize = 18
+    title.TextStrokeTransparency = 0.8
+    title.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
     -- Subtítulo
     local subtitle = Instance.new("TextLabel", main)
@@ -100,6 +136,8 @@ function PretoneioLib:MakeWindow(config)
     subtitle.TextColor3 = theme.Text
     subtitle.Font = Enum.Font.Gotham
     subtitle.TextSize = 14
+    subtitle.TextStrokeTransparency = 0.8
+    subtitle.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
     -- Container das abas
     local tabsFrame = Instance.new("Frame", main)
@@ -123,6 +161,7 @@ function PretoneioLib:MakeWindow(config)
     minimize.TextColor3 = Color3.fromRGB(0, 0, 0)
     minimize.Font = Enum.Font.GothamBold
     minimize.TextSize = 20
+    ApplyGradient(minimize, Color3.fromRGB(255, 200, 0), Color3.fromRGB(200, 150, 0))
     Instance.new("UICorner", minimize).CornerRadius = UDim.new(1, 0)
 
     local minimized = false
@@ -160,6 +199,7 @@ function PretoneioLib:MakeWindow(config)
     deleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     deleteButton.Font = Enum.Font.GothamBold
     deleteButton.TextSize = 20
+    ApplyGradient(deleteButton, Color3.fromRGB(255, 50, 50), Color3.fromRGB(200, 0, 0))
     Instance.new("UICorner", deleteButton).CornerRadius = UDim.new(1, 0)
 
     -- Função para fechar a janela
@@ -180,6 +220,7 @@ function PretoneioLib:MakeWindow(config)
         tabButton.TextColor3 = theme.Text
         tabButton.Font = Enum.Font.GothamBold
         tabButton.TextSize = 14
+        ApplyGradient(tabButton, theme.GradientStart, theme.GradientEnd)
         Instance.new("UICorner", tabButton).CornerRadius = UDim.new(0, 8)
 
         local tabContent = Instance.new("Frame", contentFrame)
@@ -198,9 +239,11 @@ function PretoneioLib:MakeWindow(config)
         end)
 
         local tab = {}
+        local layoutOrder = 0 -- Variável local para controle da ordem dentro da aba
 
         -- Função para adicionar um botão na aba
         function tab:AddButton(btnInfo)
+            layoutOrder = layoutOrder + 1 -- Incrementa a ordem
             local button = Instance.new("TextButton", tabContent)
             button.Size = UDim2.new(1, -12, 0, 30)
             button.BackgroundColor3 = theme.Button
@@ -208,7 +251,15 @@ function PretoneioLib:MakeWindow(config)
             button.Font = Enum.Font.Gotham
             button.TextSize = 14
             button.Text = btnInfo[1] or "Botão"
+            button.LayoutOrder = layoutOrder -- Define a ordem
+            ApplyGradient(button, theme.GradientStart, theme.GradientEnd)
             Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+
+            -- Adiciona borda ao botão
+            local buttonStroke = Instance.new("UIStroke", button)
+            buttonStroke.Thickness = 1
+            buttonStroke.Color = theme.Text
+            buttonStroke.Transparency = 0.7
 
             button.MouseButton1Click:Connect(function()
                 if btnInfo.Callback then
@@ -219,10 +270,11 @@ function PretoneioLib:MakeWindow(config)
 
         -- Função para adicionar uma seção na aba
         function tab:AddSection(sectionInfo)
+            layoutOrder = layoutOrder + 1 -- Incrementa a ordem
             local sectionContainer = Instance.new("Frame", tabContent)
             sectionContainer.Size = UDim2.new(1, 0, 0, 30)
             sectionContainer.BackgroundTransparency = 1
-            sectionContainer.LayoutOrder = 1
+            sectionContainer.LayoutOrder = layoutOrder -- Define a ordem
 
             local sectionTitle = Instance.new("TextLabel", sectionContainer)
             sectionTitle.Size = UDim2.new(1, 0, 0, 20)
@@ -231,6 +283,8 @@ function PretoneioLib:MakeWindow(config)
             sectionTitle.TextColor3 = theme.Text
             sectionTitle.Font = Enum.Font.Gotham
             sectionTitle.TextSize = 14
+            sectionTitle.TextStrokeTransparency = 0.8
+            sectionTitle.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
 
             return sectionContainer
         end
