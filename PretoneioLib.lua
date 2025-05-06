@@ -7,22 +7,22 @@ local LocalPlayer = Players.LocalPlayer
 -- Temas
 local Themes = {
     Dark = {
-        Background = Color3.fromRGB(30,30,30),
-        Tab = Color3.fromRGB(40,40,40),
-        Button = Color3.fromRGB(50,50,50),
-        Text = Color3.fromRGB(255,255,255)
+        Background = Color3.fromRGB(30, 30, 30),
+        Tab = Color3.fromRGB(40, 40, 40),
+        Button = Color3.fromRGB(50, 50, 50),
+        Text = Color3.fromRGB(255, 255, 255)
     },
     Light = {
-        Background = Color3.fromRGB(240,240,240),
-        Tab = Color3.fromRGB(220,220,220),
-        Button = Color3.fromRGB(200,200,200),
-        Text = Color3.fromRGB(0,0,0)
+        Background = Color3.fromRGB(240, 240, 240),
+        Tab = Color3.fromRGB(220, 220, 220),
+        Button = Color3.fromRGB(200, 200, 200),
+        Text = Color3.fromRGB(0, 0, 0)
     },
     Blue = {
-        Background = Color3.fromRGB(20,20,40),
-        Tab = Color3.fromRGB(40,60,100),
-        Button = Color3.fromRGB(60,80,140),
-        Text = Color3.fromRGB(255,255,255)
+        Background = Color3.fromRGB(20, 20, 40),
+        Tab = Color3.fromRGB(40, 60, 100),
+        Button = Color3.fromRGB(60, 80, 140),
+        Text = Color3.fromRGB(255, 255, 255)
     }
 }
 
@@ -41,6 +41,7 @@ function PretoneioLib:MakeWindow(config)
     main.BorderSizePixel = 0
     main.Active = true
     main.Draggable = true
+
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
     -- Title
@@ -67,7 +68,9 @@ function PretoneioLib:MakeWindow(config)
     tabsFrame.Position = UDim2.new(0, 0, 0, 55)
     tabsFrame.Size = UDim2.new(1, 0, 0, 30)
     tabsFrame.BackgroundTransparency = 1
+    tabsFrame.LayoutOrder = 1
 
+    -- Content Frame
     local contentFrame = Instance.new("Frame", main)
     contentFrame.Position = UDim2.new(0, 0, 0, 90)
     contentFrame.Size = UDim2.new(1, 0, 1, -90)
@@ -86,8 +89,9 @@ function PretoneioLib:MakeWindow(config)
 
     local minimized = false
     local originalSize = main.Size
-    local minimizedSize = UDim2.new(0, 420, 0, 50) -- Ajustado para mostrar apenas o título e o botão
+    local minimizedSize = UDim2.new(0, 420, 0, 50)
 
+    -- Function to Minimize/Maximize the GUI
     minimize.MouseButton1Click:Connect(function()
         if minimized then
             TweenService:Create(main, TweenInfo.new(0.3), {Size = originalSize}):Play()
@@ -105,6 +109,22 @@ function PretoneioLib:MakeWindow(config)
             minimize.Text = "+"
         end
         minimized = not minimized
+    end)
+
+    -- Delete Button
+    local deleteButton = Instance.new("TextButton", main)
+    deleteButton.Size = UDim2.new(0, 30, 0, 30)
+    deleteButton.Position = UDim2.new(1, -70, 0, 5)
+    deleteButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    deleteButton.Text = "X"
+    deleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    deleteButton.Font = Enum.Font.GothamBold
+    deleteButton.TextSize = 20
+    Instance.new("UICorner", deleteButton).CornerRadius = UDim.new(1, 0)
+
+    -- Function to Delete the GUI
+    deleteButton.MouseButton1Click:Connect(function()
+        gui:Destroy()
     end)
 
     -- Tabs
@@ -138,47 +158,38 @@ function PretoneioLib:MakeWindow(config)
 
         local tab = {}
 
-        -- Função para adicionar botão
         function tab:AddButton(btnInfo)
-            local ok, err = pcall(function()
-                local button = Instance.new("TextButton", tabContent)
-                button.Size = UDim2.new(1, -12, 0, 30)
-                button.BackgroundColor3 = theme.Button
-                button.TextColor3 = theme.Text
-                button.Font = Enum.Font.Gotham
-                button.TextSize = 14
-                button.Text = btnInfo[1] or "Botão"
-                Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+            local button = Instance.new("TextButton", tabContent)
+            button.Size = UDim2.new(1, -12, 0, 30)
+            button.BackgroundColor3 = theme.Button
+            button.TextColor3 = theme.Text
+            button.Font = Enum.Font.Gotham
+            button.TextSize = 14
+            button.Text = btnInfo[1] or "Botão"
+            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
-                button.MouseButton1Click:Connect(function()
-                    if btnInfo.Callback then
-                        btnInfo.Callback()
-                    end
-                end)
+            button.MouseButton1Click:Connect(function()
+                if btnInfo.Callback then
+                    btnInfo.Callback()
+                end
             end)
-            if not ok then warn("Erro ao criar botão:", err) end
         end
 
-        -- Função para adicionar section
-        function tab:AddSection(secInfo)
-            local ok, err = pcall(function()
-                local section = Instance.new("Frame", tabContent)
-                section.Size = UDim2.new(1, -12, 0, 40)
-                section.BackgroundColor3 = theme.Tab
-                Instance.new("UICorner", section).CornerRadius = UDim.new(0, 6)
+        function tab:AddSection(sectionInfo)
+            local sectionContainer = Instance.new("Frame", tabContent)
+            sectionContainer.Size = UDim2.new(1, 0, 0, 30)
+            sectionContainer.BackgroundTransparency = 1
+            sectionContainer.LayoutOrder = 1
 
-                -- Nome dentro da section
-                local sectionLabel = Instance.new("TextLabel", section)
-                sectionLabel.Size = UDim2.new(1, -12, 1, 0)
-                sectionLabel.BackgroundTransparency = 1
-                sectionLabel.Text = secInfo[1] or "Seção"
-                sectionLabel.TextColor3 = theme.Text
-                sectionLabel.Font = Enum.Font.Gotham
-                sectionLabel.TextSize = 14
-                sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-                sectionLabel.TextYAlignment = Enum.TextYAlignment.Center
-            end)
-            if not ok then warn("Erro ao criar seção:", err) end
+            local sectionTitle = Instance.new("TextLabel", sectionContainer)
+            sectionTitle.Size = UDim2.new(1, 0, 0, 20)
+            sectionTitle.BackgroundTransparency = 1
+            sectionTitle.Text = sectionInfo[1] or "Seção"
+            sectionTitle.TextColor3 = theme.Text
+            sectionTitle.Font = Enum.Font.Gotham
+            sectionTitle.TextSize = 14
+
+            return sectionContainer
         end
 
         return tab
