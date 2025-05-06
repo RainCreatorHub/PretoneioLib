@@ -1,10 +1,9 @@
 local PretoneioLib = {}
 local TweenService = game:GetService("TweenService")
-local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- Temas
+-- Temas disponíveis para a interface
 local Themes = {
     Dark = {
         Background = Color3.fromRGB(30, 30, 30),
@@ -26,14 +25,53 @@ local Themes = {
     }
 }
 
+-- Função para criar uma janela
 function PretoneioLib:MakeWindow(config)
     local theme = Themes[(config.Theme or "Dark"):lower():gsub("^%l", string.upper)] or Themes.Dark
 
+    -- Criação do ScreenGui
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.Name = "PretoneioLib"
     gui.ResetOnSpawn = false
 
-    -- Main Frame
+    -- Tela de introdução (se ativada)
+    if config.Intro then
+        local introFrame = Instance.new("Frame", gui)
+        introFrame.Size = UDim2.new(1, 0, 1, 0)
+        introFrame.BackgroundColor3 = theme.Background
+        introFrame.BackgroundTransparency = 1
+
+        local introText = Instance.new("TextLabel", introFrame)
+        introText.Size = UDim2.new(0, 200, 0, 50)
+        introText.Position = UDim2.new(0.5, -100, 0.5, -25)
+        introText.BackgroundTransparency = 1
+        introText.Text = config.IntroText or "Carregando..."
+        introText.TextColor3 = theme.Text
+        introText.Font = Enum.Font.GothamBold
+        introText.TextSize = 24
+        introText.TextTransparency = 1
+
+        -- Animação de fade-in e fade-out
+        local introDuration = config.IntroDuration or 3
+        local tweenInfo = TweenInfo.new(introDuration / 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        
+        -- Fade-in
+        TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 0}):Play()
+        TweenService:Create(introText, tweenInfo, {TextTransparency = 0}):Play()
+        
+        -- Espera
+        wait(introDuration / 3)
+        
+        -- Fade-out
+        TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(introText, tweenInfo, {TextTransparency = 1}):Play()
+        
+        -- Remove a tela de introdução após a animação
+        wait(introDuration / 3)
+        introFrame:Destroy()
+    end
+
+    -- Frame principal
     local main = Instance.new("Frame", gui)
     main.Size = UDim2.new(0, 420, 0, 300)
     main.Position = UDim2.new(0.3, 0, 0.3, 0)
@@ -44,7 +82,7 @@ function PretoneioLib:MakeWindow(config)
 
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
-    -- Title
+    -- Título da janela
     local title = Instance.new("TextLabel", main)
     title.Size = UDim2.new(1, 0, 0, 30)
     title.BackgroundTransparency = 1
@@ -53,7 +91,7 @@ function PretoneioLib:MakeWindow(config)
     title.Font = Enum.Font.GothamBold
     title.TextSize = 18
 
-    -- SubTitle
+    -- Subtítulo
     local subtitle = Instance.new("TextLabel", main)
     subtitle.Size = UDim2.new(1, 0, 0, 20)
     subtitle.Position = UDim2.new(0, 0, 0, 30)
@@ -63,20 +101,20 @@ function PretoneioLib:MakeWindow(config)
     subtitle.Font = Enum.Font.Gotham
     subtitle.TextSize = 14
 
-    -- Tabs Container
+    -- Container das abas
     local tabsFrame = Instance.new("Frame", main)
     tabsFrame.Position = UDim2.new(0, 0, 0, 55)
     tabsFrame.Size = UDim2.new(1, 0, 0, 30)
     tabsFrame.BackgroundTransparency = 1
     tabsFrame.LayoutOrder = 1
 
-    -- Content Frame
+    -- Frame de conteúdo
     local contentFrame = Instance.new("Frame", main)
     contentFrame.Position = UDim2.new(0, 0, 0, 90)
     contentFrame.Size = UDim2.new(1, 0, 1, -90)
     contentFrame.BackgroundTransparency = 1
 
-    -- Minimize Button
+    -- Botão de minimizar
     local minimize = Instance.new("TextButton", main)
     minimize.Size = UDim2.new(0, 30, 0, 30)
     minimize.Position = UDim2.new(1, -35, 0, 5)
@@ -91,18 +129,20 @@ function PretoneioLib:MakeWindow(config)
     local originalSize = main.Size
     local minimizedSize = UDim2.new(0, 420, 0, 50)
 
-    -- Function to Minimize/Maximize the GUI
+    -- Função para minimizar/maximizar a janela
     minimize.MouseButton1Click:Connect(function()
         if minimized then
             TweenService:Create(main, TweenInfo.new(0.3), {Size = originalSize}):Play()
             for _, v in pairs(main:GetChildren()) do
-                if v ~= minimize then v.Visible = true end
+                if v:IsA("GuiObject") and v ~= minimize then
+                    v.Visible = true
+                end
             end
             minimize.Text = "-"
         else
             TweenService:Create(main, TweenInfo.new(0.3), {Size = minimizedSize}):Play()
             for _, v in pairs(main:GetChildren()) do
-                if v ~= minimize and v ~= title and v ~= subtitle then
+                if v:IsA("GuiObject") and v ~= minimize and v ~= title and v ~= subtitle then
                     v.Visible = false
                 end
             end
@@ -111,7 +151,7 @@ function PretoneioLib:MakeWindow(config)
         minimized = not minimized
     end)
 
-    -- Delete Button
+    -- Botão de fechar
     local deleteButton = Instance.new("TextButton", main)
     deleteButton.Size = UDim2.new(0, 30, 0, 30)
     deleteButton.Position = UDim2.new(1, -70, 0, 5)
@@ -122,15 +162,16 @@ function PretoneioLib:MakeWindow(config)
     deleteButton.TextSize = 20
     Instance.new("UICorner", deleteButton).CornerRadius = UDim.new(1, 0)
 
-    -- Function to Delete the GUI
+    -- Função para fechar a janela
     deleteButton.MouseButton1Click:Connect(function()
         gui:Destroy()
     end)
 
-    -- Tabs
+    -- Variáveis para controle de abas
     local currentTab
     local window = {}
 
+    -- Função para criar uma aba
     function window:MakeTab(tabInfo)
         local tabButton = Instance.new("TextButton", tabsFrame)
         tabButton.Size = UDim2.new(0, 100, 1, 0)
@@ -158,6 +199,7 @@ function PretoneioLib:MakeWindow(config)
 
         local tab = {}
 
+        -- Função para adicionar um botão na aba
         function tab:AddButton(btnInfo)
             local button = Instance.new("TextButton", tabContent)
             button.Size = UDim2.new(1, -12, 0, 30)
@@ -175,6 +217,7 @@ function PretoneioLib:MakeWindow(config)
             end)
         end
 
+        -- Função para adicionar uma seção na aba
         function tab:AddSection(sectionInfo)
             local sectionContainer = Instance.new("Frame", tabContent)
             sectionContainer.Size = UDim2.new(1, 0, 0, 30)
