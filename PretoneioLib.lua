@@ -41,7 +41,6 @@ function PretoneioLib:MakeWindow(config)
     main.BorderSizePixel = 0
     main.Active = true
     main.Draggable = true
-
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 
     -- Title
@@ -139,21 +138,47 @@ function PretoneioLib:MakeWindow(config)
 
         local tab = {}
 
+        -- Função para adicionar botão
         function tab:AddButton(btnInfo)
-            local button = Instance.new("TextButton", tabContent)
-            button.Size = UDim2.new(1, -12, 0, 30)
-            button.BackgroundColor3 = theme.Button
-            button.TextColor3 = theme.Text
-            button.Font = Enum.Font.Gotham
-            button.TextSize = 14
-            button.Text = btnInfo[1] or "Botão"
-            Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
+            local ok, err = pcall(function()
+                local button = Instance.new("TextButton", tabContent)
+                button.Size = UDim2.new(1, -12, 0, 30)
+                button.BackgroundColor3 = theme.Button
+                button.TextColor3 = theme.Text
+                button.Font = Enum.Font.Gotham
+                button.TextSize = 14
+                button.Text = btnInfo[1] or "Botão"
+                Instance.new("UICorner", button).CornerRadius = UDim.new(0, 6)
 
-            button.MouseButton1Click:Connect(function()
-                if btnInfo.Callback then
-                    btnInfo.Callback()
-                end
+                button.MouseButton1Click:Connect(function()
+                    if btnInfo.Callback then
+                        btnInfo.Callback()
+                    end
+                end)
             end)
+            if not ok then warn("Erro ao criar botão:", err) end
+        end
+
+        -- Função para adicionar section
+        function tab:AddSection(secInfo)
+            local ok, err = pcall(function()
+                local section = Instance.new("Frame", tabContent)
+                section.Size = UDim2.new(1, -12, 0, 40)
+                section.BackgroundColor3 = theme.Tab
+                Instance.new("UICorner", section).CornerRadius = UDim.new(0, 6)
+
+                -- Nome dentro da section
+                local sectionLabel = Instance.new("TextLabel", section)
+                sectionLabel.Size = UDim2.new(1, -12, 1, 0)
+                sectionLabel.BackgroundTransparency = 1
+                sectionLabel.Text = secInfo[1] or "Seção"
+                sectionLabel.TextColor3 = theme.Text
+                sectionLabel.Font = Enum.Font.Gotham
+                sectionLabel.TextSize = 14
+                sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+                sectionLabel.TextYAlignment = Enum.TextYAlignment.Center
+            end)
+            if not ok then warn("Erro ao criar seção:", err) end
         end
 
         return tab
