@@ -39,18 +39,50 @@ local function ApplyGradient(instance, startColor, endColor)
         ColorSequenceKeypoint.new(1, endColor)
     })
     gradient.Rotation = 45 -- Gradiente diagonal para um visual mais dinâmico
+    return gradient
+end
+
+-- Função para criar uma partícula simulada
+local function CreateParticle(parent, theme)
+    local particle = Instance.new("Frame", parent)
+    particle.Size = UDim2.new(0, 8, 0, 8)
+    particle.BackgroundTransparency = 1
+    particle.Position = UDim2.new(0.5, math.random(-50, 50), 0.5, math.random(-50, 50))
+    particle.ZIndex = 2
+
+    local particleInner = Instance.new("Frame", particle)
+    particleInner.Size = UDim2.new(1, 0, 1, 0)
+    particleInner.BackgroundColor3 = theme.Text
+    ApplyGradient(particleInner, theme.Text, Color3.fromRGB(255, 255, 255))
+    Instance.new("UICorner", particleInner).CornerRadius = UDim.new(1, 0)
+
+    -- Animação da partícula
+    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+    local moveTween = TweenService:Create(particle, tweenInfo, {
+        Position = UDim2.new(0.5, math.random(-100, 100), 0.5, math.random(-100, 100)),
+        BackgroundTransparency = 1
+    })
+    moveTween:Play()
+    moveTween.Completed:Connect(function()
+        particle:Destroy()
+    end)
 end
 
 -- Função para criar uma janela
 function PretoneioLib:MakeWindow(config)
     local theme = Themes[(config.Theme or "Dark"):lower():gsub("^%l", string.upper)] or Themes.Dark
 
+    -- Remove qualquer ScreenGui existente com o mesmo nome para garantir prioridade
+    local existingGui = LocalPlayer:FindFirstChild("PlayerGui"):FindFirstChild("PretoneioLib")
+    if existingGui then
+        existingGui:Destroy()
+    end
+
     -- Criação do ScreenGui
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.Name = "PretoneioLib"
     gui.ResetOnSpawn = false
     gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    gui.ZIndex = 1000 -- Prioridade alta para evitar sobreposição
 
     -- Tela de introdução (se ativada)
     if config.Intro then
@@ -58,11 +90,12 @@ function PretoneioLib:MakeWindow(config)
         introFrame.Size = UDim2.new(1, 0, 1, 0)
         introFrame.BackgroundColor3 = theme.Background
         introFrame.BackgroundTransparency = 1
-        ApplyGradient(introFrame, theme.GradientStart, theme.GradientEnd)
+        local gradient = ApplyGradient(introFrame, theme.GradientStart, theme.GradientEnd)
 
         local introText = Instance.new("TextLabel", introFrame)
-        introText.Size = UDim2.new(0, 200, 0, 50)
-        introText.Position = UDim2.new(0.5, -100, 0.5, -25)
+        introText.Size = UDim2.new(0, 0, 0, 0) -- Começa pequena para animação de escala
+        introText.Position = UDim2.new(0.5, 0, 0.5, 0)
+        introText.AnchorPoint = Vector2.new(0.5, 0.5)
         introText.BackgroundTransparency = 1
         introText.Text = config.IntroText or "Carregando..."
         introText.TextColor3 = theme.Text
@@ -72,24 +105,38 @@ function PretoneioLib:MakeWindow(config)
 
         -- Adiciona sombra ao texto de introdução
         local shadow = Instance.new("UIStroke", introText)
-        shadow.Thickness = 2
+        shadow.Thickness = 3
         shadow.Color = Color3.fromRGB(0, 0, 0)
-        shadow.Transparency = 0.5
+        shadow.Transparency = 0.4
 
-        -- Animação de fade-in e fade-out
+        -- Animação de fade-in, escala e gradiente dinâmico
         local introDuration = config.IntroDuration or 3
-        local tweenInfo = TweenInfo.new(introDuration / 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-        
-        -- Fade-in
-        TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 0}):Play()
-        TweenService:Create(introText, tweenInfo, {TextTransparency = 0}):Play()
-        
-        -- Espera
-        wait(introDuration / 3)
-        
+        local tweenInfoFade = TweenInfo.new(introDuration / 3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+        local tweenInfoScale = TweenInfo.new(introDuration / 3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+
+        -- Fade-in e escala do texto
+        TweenService:Create(introFrame, tweenInfoFade, {BackgroundTransparency = 0}):Play()
+        TweenService:Create(introText, tweenInfoFade, {TextTransparency = 0}):Play()
+        TweenService:Create(introText, tweenInfoScale, {Size = UDim2.new(0, 200, 0, 50)}):Play()
+
+        -- Animação do gradiente (mudança de cor)
+        local gradientTween = TweenService:Create(gradient, TweenInfo.new(introDuration / 1.5, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+            Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, theme.GradientEnd),
+                ColorSequenceKeypoint.new(1, theme.GradientStart)
+            })
+        })
+        gradientTween:Play()
+
+        -- Adiciona partículas a cada 0.2 segundos
+        for i = 1, math.floor(introDuration / 0.2) do
+            CreateParticle(introFrame, theme)
+            wait(0.2)
+        end
+
         -- Fade-out
-        TweenService:Create(introFrame, tweenInfo, {BackgroundTransparency = 1}):Play()
-        TweenService:Create(introText, tweenInfo, {TextTransparency = 1}):Play()
+        TweenService:Create(introFrame, tweenInfoFade, {BackgroundTransparency = 1}):Play()
+        TweenService:Create(introText, tweenInfoFade, {TextTransparency = 1}):Play()
         
         -- Remove a tela de introdução após a animação
         wait(introDuration / 3)
@@ -101,6 +148,7 @@ function PretoneioLib:MakeWindow(config)
     main.Size = UDim2.new(0, 420, 0, 300)
     main.Position = UDim2.new(0.3, 0, 0.3, 0)
     main.BackgroundColor3 = theme.Background
+    main.BackgroundTransparency = 1 -- Começa invisível para fade-in
     main.BorderSizePixel = 0
     main.Active = true
     main.Draggable = true
@@ -206,6 +254,9 @@ function PretoneioLib:MakeWindow(config)
     deleteButton.MouseButton1Click:Connect(function()
         gui:Destroy()
     end)
+
+    -- Fade-in do frame principal
+    TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {BackgroundTransparency = 0}):Play()
 
     -- Variáveis para controle de abas
     local currentTab
