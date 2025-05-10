@@ -1,40 +1,38 @@
 local LibTest = {}
 
-function LibTest:MakeDraggableWindow(properties)
+function LibTest:MakeWindow(properties)
   local titleText = properties.Title
   local subTitleText = properties.SubTitle
 
   if not titleText and not subTitleText then
-    warn("LibTest:MakeDraggableWindow chamado sem Title ou SubTitle. Nenhum Gui foi criado.")
+    warn("LibTest:MakeWindow chamado sem Title ou SubTitle. Nenhum Gui foi criado.")
     return nil
   end
 
-  local screenGui = Instance.new("ScreenGui")
-  screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-  screenGui.Name = "LibTestDraggableWindow"
-  screenGui.DisplayOrder = 10 -- Garante que fique na frente de outros elementos
+  local Window = Instance.new("ScreenGui")
+  Window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+  Window.Name = "YorHubWindow" -- Nomeando o ScreenGui de acordo com o título
+  Window.DisplayOrder = 10 -- Garante que fique na frente de outros elementos
 
   -- Bloco para impedir cliques atrás
   local blocker = Instance.new("Frame")
   blocker.Size = UDim2.new(1, 0, 1, 0)
   blocker.BackgroundTransparency = 1
   blocker.ZIndex = 9 -- Fica atrás da janela principal
-  blocker.Parent = screenGui
+  blocker.Parent = Window
 
   local frame = Instance.new("Frame")
-  frame.Size = properties.Size or UDim2.new(0.4, 0, 0.2, 0)
   frame.AnchorPoint = Vector2.new(0.5, 0.5)
-  frame.Position = properties.Position or UDim2.new(0.5, 0, 0.5, 0)
+  frame.Position = UDim2.new(0.5, 0, 0.5, 0)
   frame.BackgroundTransparency = 0.9
-  frame.BackgroundColor3 = properties.BackgroundColor3 or Color3.new(0.2, 0.2, 0.2)
   frame.BorderSizePixel = 0
   frame.Draggable = true -- Habilita a arrastabilidade
   frame.ZIndex = 10 -- Fica na frente do blocker
-  frame.Parent = screenGui
+  frame.Parent = Window
 
   local offsetY = 0
 
-  if titleText then
+  if typeof(titleText) == "string" and #titleText > 0 then
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Text = titleText
     titleLabel.Size = UDim2.new(1, 0, 0.3, 0)
@@ -48,7 +46,7 @@ function LibTest:MakeDraggableWindow(properties)
     offsetY = offsetY + 0.3
   end
 
-  if subTitleText then
+  if typeof(subTitleText) == "string" and #subTitleText > 0 then
     local subTitleLabel = Instance.new("TextLabel")
     subTitleLabel.Text = subTitleText
     subTitleLabel.Size = UDim2.new(1, 0, 0.3, 0)
@@ -61,7 +59,24 @@ function LibTest:MakeDraggableWindow(properties)
     subTitleLabel.Parent = frame
   end
 
-  return screenGui
+  -- Define um tamanho padrão para o frame caso não seja especificado e haja conteúdo
+  if not properties.Size and (typeof(titleText) == "string" and #titleText > 0 or typeof(subTitleText) == "string" and #subTitleText > 0) then
+    local height = 0.1 -- Altura mínima
+    if typeof(titleText) == "string" and #titleText > 0 then
+      height = height + 0.3
+    end
+    if typeof(subTitleText) == "string" and #subTitleText > 0 then
+      height = height + 0.3
+    end
+    frame.Size = UDim2.new(0.4, 0, height, 0)
+  end
+
+  -- Define uma cor de fundo padrão para o frame caso não seja especificada e haja conteúdo
+  if not properties.BackgroundColor3 and (typeof(titleText) == "string" and #titleText > 0 or typeof(subTitleText) == "string" and #subTitleText > 0) then
+    frame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+  end
+
+  return Window
 end
 
 return LibTest
