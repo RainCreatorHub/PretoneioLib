@@ -93,7 +93,7 @@ function LibTest:MakeWindow(properties)
 		Window:Destroy()
 	end)
 
-	-- Arrastar
+	-- Arrastar (PC e Mobile)
 	local dragging = false
 	local dragInput, dragStart, startPos
 
@@ -108,21 +108,23 @@ function LibTest:MakeWindow(properties)
 	end
 
 	dragBar.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
 			startPos = frame.Position
 
-			input.Changed:Connect(function()
+			local connection
+			connection = input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
 					dragging = false
+					connection:Disconnect()
 				end
 			end)
 		end
 	end)
 
 	dragBar.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 			dragInput = input
 		end
 	end)
