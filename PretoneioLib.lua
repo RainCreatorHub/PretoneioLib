@@ -24,9 +24,8 @@ function LibTest:MakeWindow(properties)
 	frame.Size = UDim2.new(0, 500, 0, 350)
 	frame.AnchorPoint = Vector2.new(0.5, 0.5)
 	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	frame.BackgroundColor3 = properties.BackgroundColor3 or Color3.fromRGB(35, 35, 35)
+	frame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
 	frame.BorderSizePixel = 0
-	frame.BackgroundTransparency = 0
 	frame.ZIndex = 10
 	frame.Parent = Window
 	frame.Visible = true
@@ -51,9 +50,9 @@ function LibTest:MakeWindow(properties)
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.Text = titleText
-	titleLabel.Font = properties.TitleFont or Enum.Font.GothamBold
-	titleLabel.TextSize = properties.TitleSize or 18
-	titleLabel.TextColor3 = properties.TitleColor or Color3.new(1, 1, 1)
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextSize = 18
+	titleLabel.TextColor3 = Color3.new(1, 1, 1)
 	titleLabel.BackgroundTransparency = 1
 	titleLabel.Size = UDim2.new(1, -90, 0, 18)
 	titleLabel.Position = UDim2.new(0, 12, 0, 4)
@@ -63,9 +62,9 @@ function LibTest:MakeWindow(properties)
 
 	local subTitleLabel = Instance.new("TextLabel")
 	subTitleLabel.Text = subTitleText
-	subTitleLabel.Font = properties.SubTitleFont or Enum.Font.Gotham
-	subTitleLabel.TextSize = properties.SubTitleSize or 13
-	subTitleLabel.TextColor3 = properties.SubTitleColor or Color3.fromRGB(180, 180, 180)
+	subTitleLabel.Font = Enum.Font.Gotham
+	subTitleLabel.TextSize = 13
+	subTitleLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
 	subTitleLabel.BackgroundTransparency = 1
 	subTitleLabel.Size = UDim2.new(1, -90, 0, 14)
 	subTitleLabel.Position = UDim2.new(0, 12, 0, 20)
@@ -73,6 +72,7 @@ function LibTest:MakeWindow(properties)
 	subTitleLabel.ZIndex = 12
 	subTitleLabel.Parent = dragBar
 
+	-- Minimize botão "-" e "+"
 	local minimizeButton = Instance.new("TextButton")
 	minimizeButton.Text = "-"
 	minimizeButton.Font = Enum.Font.GothamBold
@@ -84,6 +84,7 @@ function LibTest:MakeWindow(properties)
 	minimizeButton.ZIndex = 12
 	minimizeButton.Parent = dragBar
 
+	-- Fechar
 	local closeButton = Instance.new("TextButton")
 	closeButton.Text = "X"
 	closeButton.Font = Enum.Font.GothamBold
@@ -111,14 +112,7 @@ function LibTest:MakeWindow(properties)
 		Window:Destroy()
 	end)
 
-	dragBar.InputBegan:Connect(function(input)
-		if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and
-			not closeButton:IsAncestorOf(input.Target) and
-			not minimizeButton:IsAncestorOf(input.Target) then
-			frame.Visible = not frame.Visible
-		end
-	end)
-
+	-- Drag
 	local dragging = false
 	local dragInput, dragStart, startPos
 
@@ -160,101 +154,84 @@ function LibTest:MakeWindow(properties)
 		end
 	end)
 
-	-- Botão flutuante estilo Redz v5
-	local miniGui = Instance.new("ScreenGui")
-	miniGui.Name = "MinimizeGuiButton"
-	miniGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-	miniGui.DisplayOrder = 999
-	miniGui.ResetOnSpawn = false
-	miniGui.IgnoreGuiInset = true
+	-- MinimizeGuiButton (separado)
+	function Window:AddMinimizeButton(info)
+		local minimized = false
+		local miniButton = Instance.new("ImageButton")
+		miniButton.Name = "MinimizeGuiButton"
+		miniButton.Size = UDim2.new(0, 40, 0, 40)
+		miniButton.Position = UDim2.new(0, 10, 0, 10)
+		miniButton.Image = info.Image1 or ""
+		miniButton.BackgroundTransparency = 1
+		miniButton.Parent = Window
+		miniButton.ZIndex = 100
 
-	local miniButton = Instance.new("TextButton")
-	miniButton.Size = UDim2.new(0, 45, 0, 45)
-	miniButton.Position = UDim2.new(0, 20, 0, 200)
-	miniButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-	miniButton.Text = ""
-	miniButton.AutoButtonColor = false
-	miniButton.ZIndex = 50
-	miniButton.Parent = miniGui
+		local nameTag = Instance.new("TextLabel")
+		nameTag.Text = info.Name1 or "Minimize"
+		nameTag.Size = UDim2.new(0, 80, 0, 20)
+		nameTag.Position = UDim2.new(0, 0, 1, 0)
+		nameTag.BackgroundTransparency = 1
+		nameTag.TextColor3 = Color3.new(1, 1, 1)
+		nameTag.Font = Enum.Font.Gotham
+		nameTag.TextSize = 14
+		nameTag.Parent = miniButton
+		nameTag.ZIndex = 100
 
-	local icon = Instance.new("TextLabel")
-	icon.Text = "⭘"
-	icon.Font = Enum.Font.GothamBold
-	icon.TextScaled = true
-	icon.TextColor3 = Color3.new(1, 1, 1)
-	icon.BackgroundTransparency = 1
-	icon.Size = UDim2.new(1, 0, 1, 0)
-	icon.Position = UDim2.new(0, 0, 0, 0)
-	icon.ZIndex = 51
-	icon.Parent = miniButton
+		-- Draggable
+		local dragging = false
+		local dragStart, startPos
 
-	local uicornerMini = Instance.new("UICorner")
-	uicornerMini.CornerRadius = UDim.new(1, 0)
-	uicornerMini.Parent = miniButton
+		local function update(input)
+			local delta = input.Position - dragStart
+			miniButton.Position = UDim2.new(
+				startPos.X.Scale,
+				startPos.X.Offset + delta.X,
+				startPos.Y.Scale,
+				startPos.Y.Offset + delta.Y
+			)
+		end
 
-	local uistroke = Instance.new("UIStroke")
-	uistroke.Color = Color3.fromRGB(255, 255, 255)
-	uistroke.Thickness = 1
-	uistroke.Transparency = 0.4
-	uistroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-	uistroke.Parent = miniButton
+		miniButton.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+				dragging = true
+				dragStart = input.Position
+				startPos = miniButton.Position
 
-	local uishadow = Instance.new("ImageLabel")
-	uishadow.BackgroundTransparency = 1
-	uishadow.Image = "rbxassetid://1316045217"
-	uishadow.ImageColor3 = Color3.new(0, 0, 0)
-	uishadow.ImageTransparency = 0.6
-	uishadow.ScaleType = Enum.ScaleType.Slice
-	uishadow.SliceCenter = Rect.new(10, 10, 118, 118)
-	uishadow.Size = UDim2.new(1, 12, 1, 12)
-	uishadow.Position = UDim2.new(0, -6, 0, -6)
-	uishadow.ZIndex = 49
-	uishadow.Parent = miniButton
+				local conn
+				conn = input.Changed:Connect(function()
+					if input.UserInputState == Enum.UserInputState.End then
+						dragging = false
+						conn:Disconnect()
+					end
+				end)
+			end
+		end)
 
-	local draggingMini = false
-	local dragStartMini, startPosMini
+		miniButton.InputChanged:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+				dragInput = input
+			end
+		end)
 
-	local function updateMiniDrag(input)
-		local delta = input.Position - dragStartMini
-		miniButton.Position = UDim2.new(
-			startPosMini.X.Scale,
-			startPosMini.X.Offset + delta.X,
-			startPosMini.Y.Scale,
-			startPosMini.Y.Offset + delta.Y
-		)
+		UserInputService.InputChanged:Connect(function(input)
+			if input == dragInput and dragging then
+				update(input)
+			end
+		end)
+
+		-- Toggle principal
+		miniButton.MouseButton1Click:Connect(function()
+			minimized = not minimized
+			frame.Visible = not minimized
+			nameTag.Text = minimized and info.Name2 or info.Name1
+			miniButton.Image = minimized and info.Image2 or info.Image1
+		end)
+
+		return miniButton
 	end
-
-	miniButton.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			draggingMini = true
-			dragStartMini = input.Position
-			startPosMini = miniButton.Position
-
-			local connection
-			connection = input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					draggingMini = false
-					connection:Disconnect()
-				end
-			end)
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if draggingMini and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-			updateMiniDrag(input)
-		end
-	end)
-
-	local mainVisible = true
-	miniButton.MouseButton1Click:Connect(function()
-		mainVisible = not mainVisible
-		frame.Visible = mainVisible
-	end)
 
 	function Window:Close()
 		Window:Destroy()
-		miniGui:Destroy()
 	end
 
 	return Window
