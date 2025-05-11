@@ -1,157 +1,143 @@
 local LibTest = {}
 
 local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
 function LibTest:MakeWindow(properties)
-    local titleText = properties.Title
-    local subTitleText = properties.SubTitle
+	local titleText = properties.Title or ""
+	local subTitleText = properties.SubTitle or ""
 
-    if not titleText and not subTitleText then
-        warn("LibTest:MakeWindow chamado sem Title ou SubTitle. Nenhum Gui foi criado.")
-        return nil
-    end
+	local Window = Instance.new("ScreenGui")
+	Window.Name = "PretoneioWindow"
+	Window.Parent = LocalPlayer:WaitForChild("PlayerGui")
+	Window.DisplayOrder = 10
+	Window.ResetOnSpawn = false
 
-    local themes = {
-        Dark = {
-            Background = Color3.fromRGB(30, 30, 30),
-            TitleColor = Color3.fromRGB(255, 255, 255),
-            SubTitleColor = Color3.fromRGB(180, 180, 180),
-            DragBar = Color3.fromRGB(40, 40, 40),
-            CloseText = Color3.fromRGB(255, 255, 255)
-        },
-        Light = {
-            Background = Color3.fromRGB(240, 240, 240),
-            TitleColor = Color3.fromRGB(0, 0, 0),
-            SubTitleColor = Color3.fromRGB(80, 80, 80),
-            DragBar = Color3.fromRGB(200, 200, 200),
-            CloseText = Color3.fromRGB(0, 0, 0)
-        }
-    }
+	-- Bloqueador de cliques
+	local blocker = Instance.new("Frame")
+	blocker.Size = UDim2.new(1, 0, 1, 0)
+	blocker.BackgroundTransparency = 1
+	blocker.ZIndex = 9
+	blocker.Parent = Window
 
-    local chosenTheme = themes[properties.Theme] or {}
+	-- Frame principal
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0, 500, 0, 350)
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.BackgroundColor3 = properties.BackgroundColor3 or Color3.fromRGB(35, 35, 35)
+	frame.BorderSizePixel = 0
+	frame.BackgroundTransparency = 0
+	frame.ZIndex = 10
+	frame.Parent = Window
 
-    local Window = Instance.new("ScreenGui")
-    Window.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-    Window.Name = "YorHubWindow"
-    Window.DisplayOrder = 10
-    Window.ResetOnSpawn = false
+	-- Bordas arredondadas
+	local uicorner = Instance.new("UICorner")
+	uicorner.CornerRadius = UDim.new(0, 12)
+	uicorner.Parent = frame
 
-    local blocker = Instance.new("Frame")
-    blocker.Size = UDim2.new(1, 0, 1, 0)
-    blocker.BackgroundTransparency = 1
-    blocker.ZIndex = 9
-    blocker.Parent = Window
+	-- DragBar
+	local dragBar = Instance.new("Frame")
+	dragBar.Name = "DragBar"
+	dragBar.Size = UDim2.new(1, 0, 0, 36)
+	dragBar.Position = UDim2.new(0, 0, 0, 0)
+	dragBar.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	dragBar.BorderSizePixel = 0
+	dragBar.ZIndex = 11
+	dragBar.Parent = frame
 
-    blocker.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            input:Destroy()
-        end
-    end)
+	local dragCorner = Instance.new("UICorner")
+	dragCorner.CornerRadius = UDim.new(0, 12)
+	dragCorner.Parent = dragBar
 
-    local frame = Instance.new("Frame")
-    frame.AnchorPoint = Vector2.new(0.5, 0.5)
-    frame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    frame.Size = UDim2.new(0, 500, 0, 350)
-    frame.BackgroundTransparency = 0.1
-    frame.BorderSizePixel = 0
-    frame.ZIndex = 10
-    frame.Parent = Window
-    frame.BackgroundColor3 = properties.BackgroundColor3 or chosenTheme.Background or Color3.fromRGB(50, 50, 50)
+	-- Título
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Text = titleText
+	titleLabel.Font = properties.TitleFont or Enum.Font.GothamBold
+	titleLabel.TextSize = properties.TitleSize or 18
+	titleLabel.TextColor3 = properties.TitleColor or Color3.new(1, 1, 1)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Size = UDim2.new(1, -60, 0, 18)
+	titleLabel.Position = UDim2.new(0, 12, 0, 4)
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.ZIndex = 12
+	titleLabel.Parent = dragBar
 
-    local dragging = false
-    local dragInput, dragStart, startPos
+	-- Subtítulo
+	local subTitleLabel = Instance.new("TextLabel")
+	subTitleLabel.Text = subTitleText
+	subTitleLabel.Font = properties.SubTitleFont or Enum.Font.Gotham
+	subTitleLabel.TextSize = properties.SubTitleSize or 13
+	subTitleLabel.TextColor3 = properties.SubTitleColor or Color3.fromRGB(180, 180, 180)
+	subTitleLabel.BackgroundTransparency = 1
+	subTitleLabel.Size = UDim2.new(1, -60, 0, 14)
+	subTitleLabel.Position = UDim2.new(0, 12, 0, 20)
+	subTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	subTitleLabel.ZIndex = 12
+	subTitleLabel.Parent = dragBar
 
-    local function updateDrag(input)
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
+	-- Botão de fechar
+	local closeButton = Instance.new("TextButton")
+	closeButton.Text = "X"
+	closeButton.Font = Enum.Font.GothamBold
+	closeButton.TextSize = 16
+	closeButton.TextColor3 = Color3.new(1, 1, 1)
+	closeButton.BackgroundTransparency = 1
+	closeButton.Size = UDim2.new(0, 30, 0, 30)
+	closeButton.Position = UDim2.new(1, -34, 0, 3)
+	closeButton.ZIndex = 12
+	closeButton.Parent = dragBar
 
-    local dragBar = Instance.new("Frame")
-    dragBar.Name = "DragBar"
-    dragBar.Size = UDim2.new(1, 0, 0.1, 0)
-    dragBar.Position = UDim2.new(0, 0, 0, 0)
-    dragBar.BackgroundColor3 = chosenTheme.DragBar or Color3.new(0.15, 0.15, 0.15)
-    dragBar.BorderSizePixel = 0
-    dragBar.ZIndex = 11
-    dragBar.Parent = frame
+	closeButton.MouseButton1Click:Connect(function()
+		Window:Destroy()
+	end)
 
-    dragBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
+	-- Arrastar
+	local dragging = false
+	local dragInput, dragStart, startPos
 
-    dragBar.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
-            dragInput = input
-        end
-    end)
+	local function updateDrag(input)
+		local delta = input.Position - dragStart
+		frame.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
 
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            updateDrag(input)
-        end
-    end)
+	dragBar.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = frame.Position
 
-    local offsetY = 0.1
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
 
-    if typeof(titleText) == "string" and #titleText > 0 then
-        local titleLabel = Instance.new("TextLabel")
-        titleLabel.Text = titleText
-        titleLabel.Size = UDim2.new(1, 0, 0.15, 0)
-        titleLabel.Position = UDim2.new(0.5, 0, offsetY, 0)
-        titleLabel.AnchorPoint = Vector2.new(0.5, 0)
-        titleLabel.Font = properties.TitleFont or Enum.Font.SourceSansBold
-        titleLabel.TextSize = properties.TitleSize or 20
-        titleLabel.TextColor3 = properties.TitleColor or chosenTheme.TitleColor or Color3.new(1, 1, 1)
-        titleLabel.BackgroundTransparency = 1
-        titleLabel.Parent = frame
-        titleLabel.ZIndex = 11
-        offsetY = offsetY + 0.2
-    end
+	dragBar.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
 
-    if typeof(subTitleText) == "string" and #subTitleText > 0 then
-        local subTitleLabel = Instance.new("TextLabel")
-        subTitleLabel.Text = subTitleText
-        subTitleLabel.Size = UDim2.new(1, 0, 0.15, 0)
-        subTitleLabel.Position = UDim2.new(0.5, 0, offsetY, 0)
-        subTitleLabel.AnchorPoint = Vector2.new(0.5, 0)
-        subTitleLabel.Font = properties.SubTitleFont or Enum.Font.SourceSans
-        subTitleLabel.TextSize = properties.SubTitleSize or 14
-        subTitleLabel.TextColor3 = properties.SubTitleColor or chosenTheme.SubTitleColor or Color3.new(0.8, 0.8, 0.8)
-        subTitleLabel.BackgroundTransparency = 1
-        subTitleLabel.Parent = frame
-        subTitleLabel.ZIndex = 11
-    end
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			updateDrag(input)
+		end
+	end)
 
-    local closeButton = Instance.new("TextButton")
-    closeButton.Text = "X"
-    closeButton.Size = UDim2.new(0.05, 0, 0.1, 0)
-    closeButton.Position = UDim2.new(0.95, 0, 0, 0)
-    closeButton.AnchorPoint = Vector2.new(0.5, 0)
-    closeButton.Font = Enum.Font.SourceSansBold
-    closeButton.TextSize = 14
-    closeButton.TextColor3 = chosenTheme.CloseText or Color3.new(1, 1, 1)
-    closeButton.BackgroundTransparency = 1
-    closeButton.ZIndex = 12
-    closeButton.Parent = frame
+	function Window:Close()
+		Window:Destroy()
+	end
 
-    closeButton.MouseButton1Click:Connect(function()
-        Window:Destroy()
-    end)
-
-    function Window:Close()
-        Window:Destroy()
-    end
-
-    return Window
+	return Window
 end
 
 return LibTest
